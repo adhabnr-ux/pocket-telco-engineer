@@ -6,3 +6,4 @@ runs/
 experiments/results/
 .pytest_cache/
 .DS_Store
+.bundle.tar.gz
