@@ -1,0 +1,27 @@
+# Study: how does agentic algorithm discovery scale with model and budget?
+# ~$20 in total fits the $25/month budget. Edit arms to taste.
+out_dir: results/budget_scaling
+total_budget_usd: 20.0
+seeds: [0, 1, 2]           # >= 3 seeds per arm, or you cannot tell luck from skill
+
+arms:
+  - name: local-qwen7b      # $0, runs on the Mac overnight
+    config: ../configs/ollama-local.yaml
+
+  - name: haiku-small       # cheap API model, small budget
+    config: ../configs/anthropic.yaml
+    override:
+      budget: {max_usd: 1.0}
+
+  - name: haiku-large       # same model, 4x the budget -> does more search help?
+    config: ../configs/anthropic.yaml
+    override:
+      budget: {max_usd: 4.0}
+      search: {generations: 8}
+
+  - name: no-best-seeding   # ablation: workers never see the current best solution (less exploitation)
+    config: ../configs/anthropic.yaml
+    seeds: [0]
+    override:
+      budget: {max_usd: 1.0}
+      search: {seed_with_best: false}

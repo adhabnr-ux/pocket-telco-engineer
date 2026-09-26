@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pocket-telco-engineer"
+version = "0.1.0"
+description = "Laptop-scale agentic discovery of wireless communications algorithms with NVIDIA Sionna"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Sahi Adharva Katukojula" }]
+dependencies = [
+  "torch>=2.9",
+  "sionna-no-rt>=2.1",
+  "numpy>=1.26",
+  "httpx>=0.27",
+  "pyyaml>=6",
+  "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+pte = "pte.cli:main"
+
+[tool.setuptools]
+packages = ["pte"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

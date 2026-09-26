@@ -1,0 +1,28 @@
+# Anthropic API. Needs:  export ANTHROPIC_API_KEY=...   (console.anthropic.com)
+# Model IDs and prices change: check https://docs.claude.com/en/docs/about-claude/models
+# and https://www.anthropic.com/pricing, then set them below (or via env vars).
+task: ../tasks/ofdm_channel_estimation
+run_dir: ../runs/anthropic-${PTE_WORKER_MODEL:-claude-haiku-4-5}-seed0
+seed: 0
+notes: "Cheap frontier-lab model arm."
+
+models:
+  worker:
+    provider: anthropic
+    model: ${PTE_WORKER_MODEL:-claude-haiku-4-5}
+    api_key_env: ANTHROPIC_API_KEY
+    temperature: 0.7
+    max_tokens: 6000
+    price_in_per_mtok: ${PTE_PRICE_IN:-1.0}    # USD per million input tokens  (verify!)
+    price_out_per_mtok: ${PTE_PRICE_OUT:-5.0}  # USD per million output tokens (verify!)
+
+search:
+  generations: 4
+  ideas_per_generation: 3
+  workers_per_generation: 3
+  steps_per_worker: 4
+  max_parallel: 2
+
+budget:
+  max_usd: 3.0          # hard cap for this run
+  max_calls: 300

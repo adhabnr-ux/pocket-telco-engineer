@@ -1,0 +1,29 @@
+# Free: runs a local model with Ollama (https://ollama.com). No API key, $0.
+#   ollama pull qwen2.5-coder:7b     # ~4.7 GB, fine on a 16 GB Apple-silicon Mac
+#   pte check-llm configs/ollama-local.yaml
+#   pte run configs/ollama-local.yaml
+task: ../tasks/ofdm_channel_estimation
+run_dir: ../runs/ollama-qwen7b-seed0
+seed: 0
+notes: "Local small model. Baseline arm of the budget-scaling study."
+
+models:
+  worker:
+    provider: openai                          # Ollama speaks the OpenAI chat API
+    base_url: ${OLLAMA_BASE_URL:-http://localhost:11434/v1}
+    model: ${PTE_LOCAL_MODEL:-qwen2.5-coder:7b}
+    temperature: 0.7
+    max_tokens: 4096
+    timeout_s: 900                            # local generation can be slow
+  # orchestrator: omitted -> uses the worker model
+
+search:
+  generations: 4
+  ideas_per_generation: 3
+  workers_per_generation: 3
+  steps_per_worker: 4
+  max_parallel: 1                             # one model instance on a laptop
+
+budget:
+  max_usd: 1.0                                # local models cost $0 (price 0); max_calls limits the run
+  max_calls: 200
