@@ -1,0 +1,19 @@
+{
+  "task": "ofdm_channel_estimation",
+  "orchestrator_model": "Qwen2.5-Coder-1.5B-Instruct",
+  "worker_model": "Qwen2.5-Coder-1.5B-Instruct",
+  "budget": {
+    "spent_usd": 0.0,
+    "calls": 5,
+    "input_tokens": 7564,
+    "output_tokens": 2261
+  },
+  "max_usd": 1.0,
+  "stopped_reason": null,
+  "num_candidates": 4,
+  "num_successes": 0,
+  "elapsed_s": 756.4,
+  "final": [],
+  "seed": 0,
+  "notes": "Real-LLM smoke test: Qwen2.5-Coder-1.5B-Instruct on 2 CPU cores via a local OpenAI-compatible server"
+}

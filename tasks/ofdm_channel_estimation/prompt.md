@@ -31,7 +31,9 @@ def estimate_channel(y, no):
     """
 ```
 
-A numpy array is also accepted as the return value. Use PyTorch (CPU) and/or NumPy; Sionna 2.x is installed and may be used.
+A numpy array is also accepted as the return value.
+
+Available packages: `torch` (CPU), `numpy`, `scipy`, and Sionna 2.x (PyTorch-based; its modules live under `sionna.phy`, e.g. `from sionna.phy.ofdm import ...`; the old `sionna.ofdm` paths no longer exist). Nothing else is installed (no scikit-learn, no TensorFlow) and there is no internet access.
 
 ## Evaluation
 

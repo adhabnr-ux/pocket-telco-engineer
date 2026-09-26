@@ -1,0 +1,48 @@
+{
+  "task": "/home/claude/pte/tasks/ofdm_channel_estimation",
+  "run_dir": "/tmp/claude-0/smoke/run-qwen1.5b",
+  "orchestrator": {
+    "provider": "openai",
+    "model": "Qwen2.5-Coder-1.5B-Instruct",
+    "base_url": "http://127.0.0.1:8765/v1",
+    "api_key_env": "",
+    "temperature": 0.7,
+    "max_tokens": 1200,
+    "price_in_per_mtok": 0.0,
+    "price_out_per_mtok": 0.0,
+    "timeout_s": 1800,
+    "max_retries": 0
+  },
+  "worker": {
+    "provider": "openai",
+    "model": "Qwen2.5-Coder-1.5B-Instruct",
+    "base_url": "http://127.0.0.1:8765/v1",
+    "api_key_env": "",
+    "temperature": 0.7,
+    "max_tokens": 1200,
+    "price_in_per_mtok": 0.0,
+    "price_out_per_mtok": 0.0,
+    "timeout_s": 1800,
+    "max_retries": 0
+  },
+  "search": {
+    "generations": 1,
+    "ideas_per_generation": 2,
+    "workers_per_generation": 2,
+    "steps_per_worker": 2,
+    "max_parallel": 1,
+    "seed_with_best": true,
+    "keep_last_drafts": 2
+  },
+  "budget": {
+    "max_usd": 1.0,
+    "max_calls": 10
+  },
+  "eval": {
+    "timeout_s": 180.0,
+    "memory_mb": 16384,
+    "final_top_k": 5
+  },
+  "seed": 0,
+  "notes": "Real-LLM smoke test: Qwen2.5-Coder-1.5B-Instruct on 2 CPU cores via a local OpenAI-compatible server"
+}
