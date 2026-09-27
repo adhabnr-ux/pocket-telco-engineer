@@ -86,7 +86,8 @@ def cmd_demo(args) -> int:
 
 def cmd_eval(args) -> int:
     task = Task(args.task)
-    res = task.evaluate_file(Path(args.file), split=args.split, timeout_s=args.timeout)
+    extra = ["--chunk", str(args.chunk), "--no-timing"] if args.chunk else None
+    res = task.evaluate_file(Path(args.file), split=args.split, timeout_s=args.timeout, extra_args=extra)
     print(res.output.rstrip())
     return 0 if res.success else 1
 
@@ -140,6 +141,8 @@ def main(argv=None) -> int:
     s.add_argument("--task", default=str(DEFAULT_TASK))
     s.add_argument("--split", default="dev", choices=["dev", "test"])
     s.add_argument("--timeout", type=float, default=300.0)
+    s.add_argument("--chunk", type=int, default=None,
+                   help="diagnostic: call the estimator on sub-batches of this size (1 = one slot at a time)")
     s.set_defaults(fn=cmd_eval)
 
     s = sub.add_parser("report", help="(re)build REPORT.md and report.png for a run")

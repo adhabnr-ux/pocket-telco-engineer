@@ -2,7 +2,7 @@
 #   export PTE_BASE_URL=https://openrouter.ai/api/v1
 #   export PTE_WORKER_MODEL=<model id from the provider>
 #   export PTE_API_KEY_ENV=OPENROUTER_API_KEY    (name of the env var holding your key)
-task: ../tasks/ofdm_channel_estimation
+task: ../tasks/ofdm_channel_estimation_single_slot   # realistic track, see results/RESULTS.md
 run_dir: ../runs/openai-compat-seed0
 seed: 0
 

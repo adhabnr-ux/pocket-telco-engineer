@@ -248,14 +248,25 @@ def mse(h_hat, h) -> float:
     return float(torch.mean(torch.abs(h_hat.to(torch.complex128) - h.to(torch.complex128)) ** 2))
 
 
-def measure_mse(fn, split: str) -> dict[str, float]:
-    """Return {point_key: MSE} for a callable ``fn(y, no)`` on a split."""
+def measure_mse(fn, split: str, chunk: int | None = None) -> dict[str, float]:
+    """Return {point_key: MSE} for a callable ``fn(y, no)`` on a split.
+
+    ``chunk``: if set, call the estimator on sub-batches of this size instead of
+    the full batch. ``chunk=1`` is the realistic "one slot at a time" setting in
+    which an estimator cannot pool statistics across many examples of the same
+    scenario and SNR (a structural shortcut the batched benchmark allows).
+    """
     import torch
 
     out = {}
     with torch.no_grad():
         for sc, snr, y, no, h in iter_points(split):
-            h_hat = _as_tensor(fn(y.clone(), no.clone()), y.shape[0])
+            if chunk:
+                parts = [_as_tensor(fn(y[i:i + chunk].clone(), no[i:i + chunk].clone()), len(y[i:i + chunk]))
+                         for i in range(0, y.shape[0], chunk)]
+                h_hat = torch.cat(parts, dim=0)
+            else:
+                h_hat = _as_tensor(fn(y.clone(), no.clone()), y.shape[0])
             out[point_key(sc, snr)] = mse(h_hat, h)
     return out
 
@@ -322,6 +333,8 @@ def main(argv=None) -> int:
     parser.add_argument("--split", choices=sorted(SPLITS), default="dev")
     parser.add_argument("--json", dest="json_path", default=None, help="write full results as JSON")
     parser.add_argument("--no-timing", action="store_true")
+    parser.add_argument("--chunk", type=int, default=None,
+                        help="evaluate on sub-batches of this size (1 = one slot at a time; diagnostic, not the task metric)")
     args = parser.parse_args(argv)
 
     try:
@@ -330,7 +343,7 @@ def main(argv=None) -> int:
         threads = int(os.environ.get("PTE_EVAL_THREADS", "0")) or max(1, min(4, os.cpu_count() or 1))
         torch.set_num_threads(threads)
         fn = load_candidate(args.source_file)
-        cand = measure_mse(fn, args.split)
+        cand = measure_mse(fn, args.split, chunk=args.chunk)
         result = score(cand, load_baselines(), args.split)
         runtime = float("nan") if args.no_timing else measure_runtime(fn)
         if math.isfinite(runtime) and runtime > MAX_RUNTIME_S:
@@ -340,6 +353,7 @@ def main(argv=None) -> int:
             )
         result["runtime_s"] = runtime
         result["split"] = args.split
+        result["chunk"] = args.chunk
         if not math.isfinite(result["nve"]):
             raise CandidateError("non-finite NVE")
     except Exception as exc:  # report everything as a clean FAILURE

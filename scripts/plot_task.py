@@ -76,7 +76,7 @@ def plot_mse(out: Path, candidate: Path | None, label: str, split: str) -> None:
         ax.set_xlabel("SNR [dB]")
         ax.grid(alpha=0.3, which="both")
     axes[0].set_ylabel("channel MSE")
-    axes[-1].legend(fontsize=7)
+    axes[-1].legend(fontsize=7, loc="upper right")
     fig.suptitle(f"Channel estimation error per scenario ({split} split)", fontsize=10)
     fig.tight_layout()
     fig.savefig(out, dpi=160)

@@ -1,7 +1,7 @@
 # Anthropic API. Needs:  export ANTHROPIC_API_KEY=...   (console.anthropic.com)
 # Model IDs and prices change: check https://docs.claude.com/en/docs/about-claude/models
 # and https://www.anthropic.com/pricing, then set them below (or via env vars).
-task: ../tasks/ofdm_channel_estimation
+task: ../tasks/ofdm_channel_estimation_single_slot   # realistic track, see results/RESULTS.md
 run_dir: ../runs/anthropic-${PTE_WORKER_MODEL:-claude-haiku-4-5}-seed0
 seed: 0
 notes: "Cheap frontier-lab model arm."

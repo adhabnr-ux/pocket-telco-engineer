@@ -7,9 +7,11 @@ Estimators:
   ls_linear    - LS + linear interpolation (the metric normalizer, NVE = 1)
   dft_denoise  - LS + delay-domain denoising (hand-written "engineer" baseline)
   lmmse_genie  - 2-D LMMSE using the *true* per-scenario channel covariance and
-                 the true noise variance. It is NOT statistics-agnostic, so it
-                 is not a legal candidate; it is a near-optimal reference that
-                 tells us how much room for improvement exists.
+                 the true noise variance, from the pilots only. It is NOT
+                 statistics-agnostic, so it is not a legal candidate. It is the
+                 best any *linear pilot-only* estimator can do; data-aided
+                 (semi-blind) estimators that also exploit the unknown data
+                 symbols can beat it.
 
 Usage (from this directory):
     python build_baseline.py [--cov-samples 4096]

@@ -37,7 +37,7 @@ Available packages: `torch` (CPU), `numpy`, `scipy`, and Sionna 2.x (PyTorch-bas
 
 ## Evaluation
 
-- Call the evaluation tool (or run `python eval.py draft.py`). The first output line is `SUCCESS, <NVE>, <runtime_s>` or `FAILURE,` followed by an error message. Additional lines give per-scenario MSE ratios, the gain in dB, and the fraction of the gap closed toward a genie estimator that knows the true channel statistics (a near-optimal reference you cannot directly use).
+- Call the evaluation tool (or run `python eval.py draft.py`). The first output line is `SUCCESS, <NVE>, <runtime_s>` or `FAILURE,` followed by an error message. Additional lines give per-scenario MSE ratios, the gain in dB, and the fraction of the gap closed toward a genie estimator: the pilot-only LMMSE estimator given the true channel statistics (a reference you cannot use directly; estimators that also exploit the data symbols can beat it, giving a fraction above 1).
 - Runtime is the average time of one call on a batch of 32 grids. Calls slower than 500 ms fail.
 - Returning NaN/Inf, a wrong shape, or a real-valued tensor fails.
 

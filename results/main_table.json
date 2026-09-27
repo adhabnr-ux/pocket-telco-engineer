@@ -1,0 +1,90 @@
+[
+ {
+  "estimator": "ls_linear",
+  "origin": "reference",
+  "batched_test_nve": 1.0,
+  "single_slot_test_nve": 1.0,
+  "ood_nve": 1.0,
+  "runtime_ms_batch32": 0.24515399999999998
+ },
+ {
+  "estimator": "dft_denoise",
+  "origin": "textbook",
+  "batched_test_nve": 1.188872,
+  "single_slot_test_nve": 1.188872,
+  "ood_nve": 1.2644706995723756,
+  "runtime_ms_batch32": 0.3925585
+ },
+ {
+  "estimator": "demo_hybrid",
+  "origin": "hand-made",
+  "batched_test_nve": 0.731058,
+  "single_slot_test_nve": 0.731058,
+  "ood_nve": 0.761874732548602,
+  "runtime_ms_batch32": 0.46903500000000004
+ },
+ {
+  "estimator": "batched_agent1",
+  "origin": "agent, batched track",
+  "batched_test_nve": 0.029393,
+  "single_slot_test_nve": 0.186716,
+  "ood_nve": 0.13002712599193378,
+  "runtime_ms_batch32": 81.20231
+ },
+ {
+  "estimator": "batched_agent2",
+  "origin": "agent, batched track",
+  "batched_test_nve": 0.027625,
+  "single_slot_test_nve": 0.150773,
+  "ood_nve": 0.134483469821567,
+  "runtime_ms_batch32": 112.1935
+ },
+ {
+  "estimator": "batched_agent3",
+  "origin": "agent, batched track",
+  "batched_test_nve": 0.051828,
+  "single_slot_test_nve": 0.115344,
+  "ood_nve": 0.13075937116502517,
+  "runtime_ms_batch32": 101.82629999999999
+ },
+ {
+  "estimator": "single_agent1",
+  "origin": "agent, single-slot track",
+  "batched_test_nve": 0.027531,
+  "single_slot_test_nve": 0.027531,
+  "ood_nve": 2.315057422287686,
+  "runtime_ms_batch32": 152.89749999999998
+ },
+ {
+  "estimator": "single_agent2",
+  "origin": "agent, single-slot track",
+  "batched_test_nve": 0.140645,
+  "single_slot_test_nve": 0.036853,
+  "ood_nve": 0.055893768062785044,
+  "runtime_ms_batch32": 203.69019999999998
+ },
+ {
+  "estimator": "single_agent3",
+  "origin": "agent, single-slot track",
+  "batched_test_nve": 0.029183,
+  "single_slot_test_nve": 0.029183,
+  "ood_nve": 0.0470649103411718,
+  "runtime_ms_batch32": 128.50629999999998
+ },
+ {
+  "estimator": "single_agent1_ablation_no_energy",
+  "origin": "ablation (1 line removed)",
+  "batched_test_nve": 0.028456,
+  "single_slot_test_nve": 0.028456,
+  "ood_nve": 0.049603248476100516,
+  "runtime_ms_batch32": 143.5462
+ },
+ {
+  "estimator": "lmmse_genie",
+  "origin": "not allowed: knows true statistics (pilot-only)",
+  "batched_test_nve": 0.16320625038402103,
+  "single_slot_test_nve": 0.16320625038402103,
+  "ood_nve": 0.1580349006856208,
+  "runtime_ms_batch32": null
+ }
+]

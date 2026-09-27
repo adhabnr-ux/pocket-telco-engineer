@@ -6,22 +6,31 @@ NVIDIA's AI Telco Engineer (Aït Aoudia et al., 2026; arXiv:2604.19803 and follo
 
 **Primary question.** For statistics-agnostic OFDM channel estimation, how does the best discovered estimator's held-out NVE depend on (a) the model and (b) the LLM budget?
 
+## Status
+
+- **Round 1 done (2026-09-26):** frontier-agent arm (3 Claude agents per track, 40-eval cap). See
+  `results/RESULTS.md`. It set the "what is possible" ceiling (single-slot test NVE ~0.03) and produced two findings
+  that now shape the study: batch pooling inflates scores, and simulator artifacts get exploited. Consequently the
+  budget study runs on the **single-slot track**, and every reported winner must also pass `scripts/stress_test.py`.
+- **Next:** the budget-scaling study below (needs an API key or a local model).
+
 ## Hypotheses (write them down *before* running, so you cannot move the goalposts)
 
 - **H1.** A cheap API model (Claude Haiku 4.5) beats the reference estimator (test NVE < 1.0) in every repeat with a $1 budget.
 - **H2.** Quality improves roughly logarithmically with budget: quadrupling spend ($1 → $4) closes a further, smaller fraction of the gap to the genie LMMSE.
 - **H3.** A 7B local model finds valid estimators but rarely beats the simple SNR-switched hybrid (test NVE 0.731).
+- **H3b.** Cheaper searches exploit benchmark artifacts *more* often than frontier agents (measure: fraction of runs whose winner fails the stress test).
 - **H4.** Showing workers the current best solution (exploitation) helps at small budgets.
 
 ## Protocol
 
-1. Freeze the task: `tasks/ofdm_channel_estimation` at a tagged git commit. Never change the evaluation after seeing results (if you must, re-run everything and say so).
+1. Freeze the task: `tasks/ofdm_channel_estimation_single_slot` (and its shared harness) at a tagged git commit. Never change the evaluation after seeing results (if you must, re-run everything and say so).
 2. Run `experiments/budget_scaling.yaml`: every arm x 3 repeats. Record the git commit, date, model IDs and prices in your lab notebook.
 3. Report **held-out test NVE** of the best dev candidate of each run (from `final.json`), as mean ± spread over repeats. Dev numbers are for the search, not for claims.
 4. Main figure: best-so-far NVE vs cumulative spend, all runs overlaid (`pte compare`).
 5. Secondary: success rate (fraction of candidates that evaluate), Pareto front (NVE vs runtime), fraction of the LS → genie-LMMSE gap closed.
 6. Read the top candidates. Explain in plain words *what algorithm* the model found and *why* it works (e.g. "estimates the frequency covariance from the batch, then Wiener-filters"). This explanation is what judges and reviewers care about most.
-7. Sanity checks for every claimed winner: runs on the test split, contains no blocklisted constructs, still works with a batch size of 1, and beats the reference in every scenario or you say where it loses.
+7. Sanity checks for every claimed winner: runs on the test split, contains no blocklisted constructs, scores well on the single-slot track, survives `scripts/stress_test.py`, and beats the reference in every scenario or you say where it loses.
 
 ## Controls and threats to validity
 

@@ -6,7 +6,7 @@ NVIDIA Research's [*The AI Telco Engineer*](https://github.com/NVlabs/the-ai-tel
 
 It contains:
 
-1. **A new, CPU-friendly benchmark task**: *statistics-agnostic OFDM channel estimation* built on NVIDIA [Sionna 2.x](https://github.com/NVlabs/sionna). Four 3GPP TDL scenarios (flat indoor, dispersive urban, 360 km/h high-speed, rural LOS), 7 SNRs, held-out test split, and a genie LMMSE reference that shows how much headroom exists. One evaluation takes ~4 s on a laptop CPU. The folder is **drop-in compatible with AITE** (`eval_tool.py`, `config.json`, Dockerfile), so the same task runs on NVIDIA's full framework.
+1. **A new, CPU-friendly benchmark task**: *statistics-agnostic OFDM channel estimation* built on NVIDIA [Sionna 2.x](https://github.com/NVlabs/sionna). Four 3GPP TDL scenarios (flat indoor, dispersive urban, 360 km/h high-speed, rural LOS), 7 SNRs, held-out test split, and a genie pilot-only LMMSE reference. One evaluation takes ~4 s on a laptop CPU. The folder is **drop-in compatible with AITE** (`eval_tool.py`, `config.json`, Dockerfile), so the same task runs on NVIDIA's full framework.
 2. **A lightweight search loop** re-implementing AITE's idea-driven orchestrator/worker loop in ~600 lines: no Docker, no GPU, no tool calling (so small local models work), any OpenAI-compatible endpoint (Ollama, OpenRouter, OpenAI, vLLM) or Anthropic, **a hard dollar cap**, resumable runs, and full logs.
 3. **Experiment tooling**: best-so-far-vs-spend curves, Pareto fronts, held-out re-evaluation, multi-seed study runner, and publication figures.
 
@@ -18,7 +18,7 @@ python3.12 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pte demo                    # full pipeline with a scripted fake LLM: no API key, no cost
 open runs/demo*/REPORT.md
-python -m pytest -q         # 41 tests, ~2-3 min on a laptop
+python -m pytest -q         # 43 tests, ~2-3 min on a laptop
 ```
 
 ## Evaluate your own estimator
@@ -31,19 +31,34 @@ pte eval my_estimator.py --split test # held-out split
 python scripts/plot_task.py --candidate my_estimator.py --label "mine"   # MSE-vs-SNR figure
 ```
 
-## Where things stand (reference estimators)
+## Results so far
 
-NVE = mean over the 28 (scenario, SNR) points of MSE / MSE of LS + linear interpolation. Lower is better.
+**Round 1 (Sept 2026):** six frontier AI agents (Claude, 2-4 h each, 40-evaluation cap) designed estimators ~17 dB
+better than the textbook method, beating even a genie that knows the true channel statistics. They also showed
+how agentic discovery goes wrong: a batched benchmark inflated scores 2-6x, and the top benchmark score came from
+exploiting a simulator artifact (per-slot energy normalization) that made it 2.3x *worse* than textbook on
+realistic channels until one line was removed. Full write-up: **[results/RESULTS.md](results/RESULTS.md)**.
 
-| estimator | what it is | dev NVE | test NVE |
+![main results](figures/main_results.png)
+
+| estimator | batched track | single-slot track | out-of-distribution |
 |---|---|---|---|
-| `ls_nearest` | LS at pilots, nearest-neighbour fill | 2.009 | 2.000 |
-| `ls_linear` | LS + linear interpolation (**the reference**) | 1.000 | 1.000 |
-| `dft_denoise` | textbook delay-domain denoising | 1.213 | 1.189 |
-| demo hybrid | SNR switch between the two above | 0.738 | 0.731 |
-| `lmmse_genie` | LMMSE with the *true* channel statistics (not allowed, just a yardstick) | **0.157** | **0.163** |
+| `ls_linear` (reference) | 1.000 | 1.000 | 1.000 |
+| `dft_denoise` (textbook) | 1.189 | 1.189 | 1.264 |
+| `lmmse_genie` (knows true statistics; pilots only) | 0.163 | 0.163 | 0.158 |
+| best agent, batched track | 0.028 | 0.151 | 0.135 |
+| best agent on the benchmark (`single_agent1`) | **0.028** | **0.028** | 2.315 |
+| most robust agent (`single_agent3`) | 0.029 | 0.029 | **0.047** |
 
-The gap between ~0.73 and ~0.16 is the prize: an estimator that learns the channel's statistics from the data it receives. Note that the "textbook" DFT method is *worse* than the reference on average because of its error floor on dispersive channels at high SNR ([figure](figures/mse_vs_snr.png)); robustness across scenarios is the whole game.
+Held-out test NVE, lower is better. Discovered code, agents' own notes and evaluation logs: `results/discovered/`.
+
+## Two tracks
+
+- `tasks/ofdm_channel_estimation`: the original, AITE-compatible task. Each call gets 32 slots from one scenario
+  and SNR, so pooling statistics across them is possible.
+- `tasks/ofdm_channel_estimation_single_slot`: same everything, scored one slot at a time (realistic).
+  **Use this one for new experiments.**
+- `scripts/stress_test.py`: out-of-distribution check on four channel families the task never shows.
 
 ## Run a real search
 
@@ -60,6 +75,7 @@ Cheap API (Anthropic Claude Haiku 4.5 at $1/$5 per million tokens as of Sept 202
 ```bash
 export ANTHROPIC_API_KEY=...
 pte run configs/anthropic.yaml            # hard-capped at $3 by the config
+# tip: set `task: ../tasks/ofdm_channel_estimation_single_slot` in the config for the realistic track
 ```
 
 Stop with Ctrl+C at any time; rerun the same command to resume. Each run directory contains `leaderboard.jsonl` (every candidate), `candidates/` (every file the model wrote), `transcripts/` (every prompt/reply with token counts and cost), `final.json` (held-out results) and `REPORT.md` + `report.png`.

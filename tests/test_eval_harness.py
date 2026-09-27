@@ -137,3 +137,37 @@ def test_numpy_return_is_accepted(task):
 def test_held_out_split(task):
     res = task.evaluate_file(BASELINES / "ls_linear.py", split="test")
     assert res.success and res.metric == pytest.approx(1.0, abs=1e-6)
+
+
+def test_single_slot_track_shares_harness_and_scores_reference():
+    from conftest import REPO
+    from pte.task import Task
+
+    single = Task(REPO / "tasks" / "ofdm_channel_estimation_single_slot")
+    assert single.eval_dir == (REPO / "tasks" / "ofdm_channel_estimation" / "eval").resolve()
+    assert single.eval_args == ["--chunk", "1"]
+    assert "ONE slot at a time" in single.prompt
+    res = single.evaluate_file(BASELINES / "ls_linear.py")
+    assert res.success and res.metric == pytest.approx(1.0, abs=1e-6)
+    assert res.details["chunk"] == 1
+
+
+def test_chunking_exposes_batch_pooling(task):
+    """An estimator that pools statistics across the batch scores differently when called one slot at a time."""
+    code = ("import torch\nfrom link_config import *\n"
+            "def estimate_channel(y, no):\n"
+            "    # cheat-ish: average the pilot-LS estimate over the whole batch\n"
+            "    m = torch.as_tensor(PILOT_MASK); p = torch.as_tensor(PILOT_SYMBOLS)\n"
+            "    ls = (y[:, m] / p[m]).mean(0, keepdim=True)\n"
+            "    g = ls.mean().expand(y.shape[0], 14, 72).clone()\n"
+            "    return g.to(torch.complex64)\n")
+    import pathlib
+    import tempfile
+
+    batched = task.evaluate_code(code)
+    with tempfile.TemporaryDirectory() as d:
+        f = pathlib.Path(d) / "c.py"
+        f.write_text(code)
+        single = task.evaluate_file(f, extra_args=["--chunk", "1", "--no-timing"])
+    assert batched.success and single.success
+    assert batched.metric != pytest.approx(single.metric, rel=1e-3)

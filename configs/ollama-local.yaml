@@ -2,7 +2,7 @@
 #   ollama pull qwen2.5-coder:7b     # ~4.7 GB, fine on a 16 GB Apple-silicon Mac
 #   pte check-llm configs/ollama-local.yaml
 #   pte run configs/ollama-local.yaml
-task: ../tasks/ofdm_channel_estimation
+task: ../tasks/ofdm_channel_estimation_single_slot   # realistic track, see results/RESULTS.md
 run_dir: ../runs/ollama-qwen7b-seed0
 seed: 0
 notes: "Local small model. Baseline arm of the budget-scaling study."

@@ -55,10 +55,14 @@ class Task:
 
     def __init__(self, folder: str | Path):
         self.folder = Path(folder).resolve()
-        if not (self.folder / "eval" / "eval.py").exists():
-            raise FileNotFoundError(f"{self.folder} is not a task folder (missing eval/eval.py)")
         cfg_path = self.folder / "config.json"
         self.config = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
+        # A task variant may reuse another task's harness (pte_eval_dir) with extra
+        # evaluation flags (pte_eval_args), e.g. the single-slot track.
+        self.eval_dir = (self.folder / self.config.get("pte_eval_dir", "eval")).resolve()
+        self.eval_args: list[str] = [str(a) for a in self.config.get("pte_eval_args", [])]
+        if not (self.eval_dir / "eval.py").exists():
+            raise FileNotFoundError(f"{self.folder} is not a task folder (missing {self.eval_dir}/eval.py)")
         self.higher_is_better: bool = bool(self.config.get("higher_is_better", False))
         self.prompt: str = (self.folder / self.config.get("prompt_path", "prompt.md")).read_text()
         self.name = self.folder.name
@@ -66,12 +70,12 @@ class Task:
     # Files the candidate may read (task definition) vs harness-only files.
     @property
     def public_files(self) -> list[Path]:
-        return [p for p in (self.folder / "eval").glob("link_config.py")]
+        return [p for p in self.eval_dir.glob("link_config.py")]
 
     @property
     def harness_files(self) -> list[Path]:
         skip = {"build_baseline.py", "__pycache__"}
-        return [p for p in (self.folder / "eval").iterdir() if p.name not in skip and p.is_file()]
+        return [p for p in self.eval_dir.iterdir() if p.name not in skip and p.is_file()]
 
     def better(self, a: float, b: float | None) -> bool:
         if b is None:
@@ -84,7 +88,8 @@ class Task:
             shutil.copy2(p, workspace / p.name)
 
     def evaluate_file(self, source: Path, split: str = "dev", timeout_s: float = 180.0,
-                      memory_mb: int | None = 16384, threads: int | None = None) -> EvalResult:
+                      memory_mb: int | None = 16384, threads: int | None = None,
+                      extra_args: list[str] | None = None) -> EvalResult:
         """Evaluate a candidate file in a fresh scratch directory (harness copied in)."""
         source = Path(source).resolve()
         with tempfile.TemporaryDirectory(prefix="pte_eval_") as tmp:
@@ -93,7 +98,8 @@ class Task:
                 shutil.copy2(p, tmp / p.name)
             shutil.copy2(source, tmp / "draft.py")
             json_path = tmp / "_result.json"
-            proc = run_python(["eval.py", "draft.py", "--split", split, "--json", json_path.name],
+            proc = run_python(["eval.py", "draft.py", "--split", split, "--json", json_path.name,
+                               *self.eval_args, *(extra_args or [])],
                               cwd=tmp, timeout_s=timeout_s, memory_mb=memory_mb,
                               extra_env={"PTE_EVAL_THREADS": str(threads)} if threads else None)
             if proc.timed_out:
@@ -116,5 +122,5 @@ class Task:
                                       threads=threads)
 
     def baselines(self) -> dict:
-        path = self.folder / "eval" / "baseline_mse.json"
+        path = self.eval_dir / "baseline_mse.json"
         return json.loads(path.read_text()) if path.exists() else {}
